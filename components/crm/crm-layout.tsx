@@ -21,6 +21,11 @@ import {
   Receipt,
   MapPin,
   Monitor,
+  Wrench,
+  Ticket,
+  Clock,
+  UserSearch,
+  ChevronRight,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -28,14 +33,23 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,7 +62,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-import { currentUser, notifications } from '@/lib/crm-data'
+import { currentUser, notifications, serviceAlerts } from '@/lib/crm-data'
 import { NotificationsDropdown } from './notifications-dropdown'
 
 const navigation = [
@@ -60,6 +74,12 @@ const navigation = [
   { name: 'Expenses', href: '/expenses', icon: Receipt },
   { name: 'Drawings', href: '/drawings', icon: PenTool },
   { name: 'Tracking', href: '/tracking', icon: MapPin },
+]
+
+const serviceNavigation = [
+  { name: 'Tickets', href: '/service/tickets', icon: Ticket },
+  { name: 'Customers', href: '/service/customers', icon: UserSearch },
+  { name: 'SLA Monitoring', href: '/service/sla', icon: Clock },
 ]
 
 const bottomNavigation = [
@@ -112,6 +132,57 @@ export function CRMLayout({ children }: CRMLayoutProps) {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          {/* Service Module */}
+          <SidebarGroup>
+            <SidebarGroupLabel>Service</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <Collapsible
+                  defaultOpen={pathname.startsWith('/service')}
+                  className="group/collapsible"
+                >
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton
+                        isActive={pathname.startsWith('/service')}
+                        tooltip="Service"
+                      >
+                        <Wrench className="size-4" />
+                        <span>Service</span>
+                        <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {serviceNavigation.map((item) => (
+                          <SidebarMenuSubItem key={item.name}>
+                            <SidebarMenuSubButton
+                              asChild
+                              isActive={pathname.startsWith(item.href)}
+                            >
+                              <Link href={item.href}>
+                                <item.icon className="size-4" />
+                                <span>{item.name}</span>
+                                {item.name === 'Tickets' && serviceAlerts.filter(a => !a.read).length > 0 && (
+                                  <Badge
+                                    variant="destructive"
+                                    className="ml-auto size-5 justify-center p-0 text-xs"
+                                  >
+                                    {serviceAlerts.filter(a => !a.read).length}
+                                  </Badge>
+                                )}
+                              </Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

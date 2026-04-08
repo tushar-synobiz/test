@@ -9,6 +9,14 @@ export type ApprovalStatus = 'pending' | 'approved' | 'rejected'
 export type ExpenseStatus = 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'reimbursed'
 export type ExpenseCategory = 'travel' | 'meals' | 'office' | 'software' | 'equipment' | 'other'
 
+// Service Module Types
+export type TicketStatus = 'open' | 'assigned' | 'in_progress' | 'waiting' | 'resolved' | 'closed'
+export type TicketPriority = 'low' | 'medium' | 'high' | 'critical'
+export type WarrantyStatus = 'valid' | 'expired' | 'unknown'
+export type SAPSyncStatus = 'synced' | 'pending' | 'failed'
+export type AlertType = 'info' | 'warning' | 'critical'
+export type AlertCategory = 'sla_breach' | 'ticket_assigned' | 'escalation' | 'approval_pending' | 'ticket_updated'
+
 export interface User {
   id: string
   name: string
@@ -219,6 +227,98 @@ export interface NotificationSettings {
   activityReminders: boolean
   approvalAlerts: boolean
   dealUpdates: boolean
+}
+
+// Service Module Interfaces
+export interface ServiceCustomer {
+  id: string
+  name: string
+  pin: string
+  email: string
+  phone: string
+  address: string
+  sapCustomerId?: string
+  sapSyncStatus?: SAPSyncStatus
+  createdAt: Date
+}
+
+export interface Product {
+  id: string
+  serialNumber: string
+  name: string
+  model: string
+  warrantyStatus: WarrantyStatus
+  warrantyExpiry?: Date
+  contractInfo?: string
+  sapSyncStatus?: SAPSyncStatus
+}
+
+export interface ServiceLineItem {
+  id: string
+  description: string
+  quantity: number
+  chargeable: boolean
+  quotationId?: string
+}
+
+export interface GatePass {
+  gateInTimestamp?: Date
+  gateInImages?: string[]
+  gateOutTimestamp?: Date
+  gateOutImages?: string[]
+  customerSignature?: string
+}
+
+export interface TicketFeedback {
+  rating: number
+  comments: string
+  submittedAt: Date
+}
+
+export interface TicketActivity {
+  id: string
+  type: 'status_change' | 'assignment' | 'note' | 'escalation' | 'quotation_created'
+  description: string
+  previousValue?: string
+  newValue?: string
+  performedBy: User
+  timestamp: Date
+}
+
+export interface Ticket {
+  id: string
+  ticketNo: string
+  customer: ServiceCustomer
+  product: Product
+  status: TicketStatus
+  priority: TicketPriority
+  issueDescription: string
+  assignedTo?: User
+  lineItems: ServiceLineItem[]
+  gatePass?: GatePass
+  feedback?: TicketFeedback
+  activities: TicketActivity[]
+  slaDueTime: Date
+  isEscalated: boolean
+  linkedQuotationId?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface SLAConfig {
+  priority: TicketPriority
+  responseTimeHours: number
+}
+
+export interface ServiceAlert {
+  id: string
+  type: AlertType
+  category: AlertCategory
+  title: string
+  message: string
+  relatedTicketId?: string
+  read: boolean
+  createdAt: Date
 }
 
 // Dummy Users
@@ -922,6 +1022,366 @@ export const defaultNotificationSettings: NotificationSettings = {
   activityReminders: true,
   approvalAlerts: true,
   dealUpdates: true,
+}
+
+// Service Module Data
+
+// SLA Configuration
+export const slaConfigs: SLAConfig[] = [
+  { priority: 'low', responseTimeHours: 48 },
+  { priority: 'medium', responseTimeHours: 24 },
+  { priority: 'high', responseTimeHours: 8 },
+  { priority: 'critical', responseTimeHours: 4 },
+]
+
+// Service Customers
+export const serviceCustomers: ServiceCustomer[] = [
+  {
+    id: 'sc-1',
+    name: 'TechCorp Inc.',
+    pin: 'TC-001',
+    email: 'service@techcorp.io',
+    phone: '+1 (555) 123-4567',
+    address: '123 Tech Street, San Francisco, CA 94102',
+    sapCustomerId: 'SAP-10001',
+    sapSyncStatus: 'synced',
+    createdAt: new Date('2025-01-15'),
+  },
+  {
+    id: 'sc-2',
+    name: 'Global Manufacturing Ltd',
+    pin: 'GM-002',
+    email: 'support@globalmanuf.com',
+    phone: '+1 (555) 234-5678',
+    address: '456 Industrial Ave, Chicago, IL 60601',
+    sapCustomerId: 'SAP-10002',
+    sapSyncStatus: 'synced',
+    createdAt: new Date('2025-02-20'),
+  },
+  {
+    id: 'sc-3',
+    name: 'RetailPlus Stores',
+    pin: 'RP-003',
+    email: 'maintenance@retailplus.com',
+    phone: '+1 (555) 345-6789',
+    address: '789 Commerce Blvd, New York, NY 10001',
+    sapCustomerId: 'SAP-10003',
+    sapSyncStatus: 'pending',
+    createdAt: new Date('2025-03-10'),
+  },
+  {
+    id: 'sc-4',
+    name: 'HealthSys Medical',
+    pin: 'HS-004',
+    email: 'equipment@healthsys.org',
+    phone: '+1 (555) 456-7890',
+    address: '321 Medical Center Dr, Boston, MA 02101',
+    sapSyncStatus: 'failed',
+    createdAt: new Date('2025-04-05'),
+  },
+]
+
+// Products
+export const products: Product[] = [
+  {
+    id: 'prod-1',
+    serialNumber: 'SN-2024-001234',
+    name: 'Industrial Printer X500',
+    model: 'X500-PRO',
+    warrantyStatus: 'valid',
+    warrantyExpiry: new Date('2027-06-15'),
+    contractInfo: 'Premium Support Contract',
+    sapSyncStatus: 'synced',
+  },
+  {
+    id: 'prod-2',
+    serialNumber: 'SN-2023-005678',
+    name: 'CNC Machine M200',
+    model: 'M200-IND',
+    warrantyStatus: 'expired',
+    warrantyExpiry: new Date('2025-12-31'),
+    sapSyncStatus: 'synced',
+  },
+  {
+    id: 'prod-3',
+    serialNumber: 'SN-2024-009012',
+    name: 'POS Terminal T100',
+    model: 'T100-RETAIL',
+    warrantyStatus: 'valid',
+    warrantyExpiry: new Date('2026-08-20'),
+    contractInfo: 'Standard Support',
+    sapSyncStatus: 'pending',
+  },
+  {
+    id: 'prod-4',
+    serialNumber: 'SN-2024-003456',
+    name: 'Medical Scanner S300',
+    model: 'S300-MED',
+    warrantyStatus: 'unknown',
+    sapSyncStatus: 'failed',
+  },
+]
+
+// Service Tickets
+export const tickets: Ticket[] = [
+  {
+    id: 'tkt-1',
+    ticketNo: 'TKT-2026-0001',
+    customer: serviceCustomers[0],
+    product: products[0],
+    status: 'in_progress',
+    priority: 'high',
+    issueDescription: 'Printer showing error code E-502. Paper jam sensor malfunction. Customer reports intermittent printing failures.',
+    assignedTo: users[1],
+    lineItems: [
+      { id: 'li-1', description: 'Diagnostic Service', quantity: 1, chargeable: false },
+      { id: 'li-2', description: 'Sensor Replacement', quantity: 1, chargeable: true },
+      { id: 'li-3', description: 'Labor (2 hours)', quantity: 2, chargeable: true },
+    ],
+    gatePass: {
+      gateInTimestamp: new Date('2026-04-06T09:30:00'),
+      gateInImages: ['/uploads/gate-in-1.jpg'],
+    },
+    activities: [
+      { id: 'act-1', type: 'status_change', description: 'Ticket created', newValue: 'open', performedBy: users[0], timestamp: new Date('2026-04-05T14:00:00') },
+      { id: 'act-2', type: 'assignment', description: 'Assigned to Michael Roberts', newValue: 'Michael Roberts', performedBy: users[0], timestamp: new Date('2026-04-05T14:30:00') },
+      { id: 'act-3', type: 'status_change', description: 'Status changed', previousValue: 'assigned', newValue: 'in_progress', performedBy: users[1], timestamp: new Date('2026-04-06T10:00:00') },
+    ],
+    slaDueTime: new Date('2026-04-05T22:00:00'),
+    isEscalated: true,
+    createdAt: new Date('2026-04-05T14:00:00'),
+    updatedAt: new Date('2026-04-06T10:00:00'),
+  },
+  {
+    id: 'tkt-2',
+    ticketNo: 'TKT-2026-0002',
+    customer: serviceCustomers[1],
+    product: products[1],
+    status: 'waiting',
+    priority: 'critical',
+    issueDescription: 'CNC machine spindle motor failure. Production line halted. Urgent repair needed.',
+    assignedTo: users[2],
+    lineItems: [
+      { id: 'li-4', description: 'Emergency Callout', quantity: 1, chargeable: true },
+      { id: 'li-5', description: 'Spindle Motor Replacement', quantity: 1, chargeable: true },
+      { id: 'li-6', description: 'Calibration Service', quantity: 1, chargeable: true },
+    ],
+    gatePass: {
+      gateInTimestamp: new Date('2026-04-07T08:00:00'),
+      gateInImages: ['/uploads/gate-in-2.jpg', '/uploads/gate-in-2b.jpg'],
+    },
+    activities: [
+      { id: 'act-4', type: 'status_change', description: 'Ticket created', newValue: 'open', performedBy: users[0], timestamp: new Date('2026-04-07T07:30:00') },
+      { id: 'act-5', type: 'assignment', description: 'Assigned to Emily Davis', newValue: 'Emily Davis', performedBy: users[0], timestamp: new Date('2026-04-07T07:35:00') },
+      { id: 'act-6', type: 'status_change', description: 'Status changed', previousValue: 'assigned', newValue: 'in_progress', performedBy: users[2], timestamp: new Date('2026-04-07T08:15:00') },
+      { id: 'act-7', type: 'note', description: 'Waiting for spare part delivery. ETA: 2 days.', performedBy: users[2], timestamp: new Date('2026-04-07T10:00:00') },
+      { id: 'act-8', type: 'status_change', description: 'Status changed', previousValue: 'in_progress', newValue: 'waiting', performedBy: users[2], timestamp: new Date('2026-04-07T10:05:00') },
+    ],
+    slaDueTime: new Date('2026-04-07T11:30:00'),
+    isEscalated: true,
+    linkedQuotationId: 'quot-srv-1',
+    createdAt: new Date('2026-04-07T07:30:00'),
+    updatedAt: new Date('2026-04-07T10:05:00'),
+  },
+  {
+    id: 'tkt-3',
+    ticketNo: 'TKT-2026-0003',
+    customer: serviceCustomers[2],
+    product: products[2],
+    status: 'open',
+    priority: 'medium',
+    issueDescription: 'POS terminal touchscreen unresponsive in bottom left corner. Affecting checkout operations.',
+    lineItems: [
+      { id: 'li-7', description: 'Touchscreen Diagnosis', quantity: 1, chargeable: false },
+    ],
+    activities: [
+      { id: 'act-9', type: 'status_change', description: 'Ticket created', newValue: 'open', performedBy: users[0], timestamp: new Date('2026-04-08T09:00:00') },
+    ],
+    slaDueTime: new Date('2026-04-09T09:00:00'),
+    isEscalated: false,
+    createdAt: new Date('2026-04-08T09:00:00'),
+    updatedAt: new Date('2026-04-08T09:00:00'),
+  },
+  {
+    id: 'tkt-4',
+    ticketNo: 'TKT-2026-0004',
+    customer: serviceCustomers[3],
+    product: products[3],
+    status: 'resolved',
+    priority: 'high',
+    issueDescription: 'Medical scanner calibration drift. Images showing distortion.',
+    assignedTo: users[3],
+    lineItems: [
+      { id: 'li-8', description: 'Calibration Service', quantity: 1, chargeable: false },
+      { id: 'li-9', description: 'Software Update', quantity: 1, chargeable: false },
+    ],
+    gatePass: {
+      gateInTimestamp: new Date('2026-04-03T10:00:00'),
+      gateInImages: ['/uploads/gate-in-4.jpg'],
+      gateOutTimestamp: new Date('2026-04-04T16:00:00'),
+      gateOutImages: ['/uploads/gate-out-4.jpg'],
+      customerSignature: '/uploads/signature-4.png',
+    },
+    feedback: {
+      rating: 5,
+      comments: 'Excellent service! Quick resolution and professional team.',
+      submittedAt: new Date('2026-04-05T10:00:00'),
+    },
+    activities: [
+      { id: 'act-10', type: 'status_change', description: 'Ticket created', newValue: 'open', performedBy: users[0], timestamp: new Date('2026-04-03T09:00:00') },
+      { id: 'act-11', type: 'assignment', description: 'Assigned to James Wilson', newValue: 'James Wilson', performedBy: users[0], timestamp: new Date('2026-04-03T09:15:00') },
+      { id: 'act-12', type: 'status_change', description: 'Status changed', previousValue: 'assigned', newValue: 'in_progress', performedBy: users[3], timestamp: new Date('2026-04-03T10:30:00') },
+      { id: 'act-13', type: 'status_change', description: 'Status changed', previousValue: 'in_progress', newValue: 'resolved', performedBy: users[3], timestamp: new Date('2026-04-04T15:30:00') },
+    ],
+    slaDueTime: new Date('2026-04-03T17:00:00'),
+    isEscalated: false,
+    createdAt: new Date('2026-04-03T09:00:00'),
+    updatedAt: new Date('2026-04-04T15:30:00'),
+  },
+  {
+    id: 'tkt-5',
+    ticketNo: 'TKT-2026-0005',
+    customer: serviceCustomers[0],
+    product: products[0],
+    status: 'closed',
+    priority: 'low',
+    issueDescription: 'Routine maintenance check and firmware update requested.',
+    assignedTo: users[1],
+    lineItems: [
+      { id: 'li-10', description: 'Preventive Maintenance', quantity: 1, chargeable: true },
+      { id: 'li-11', description: 'Firmware Update', quantity: 1, chargeable: false },
+    ],
+    gatePass: {
+      gateInTimestamp: new Date('2026-03-28T09:00:00'),
+      gateInImages: ['/uploads/gate-in-5.jpg'],
+      gateOutTimestamp: new Date('2026-03-28T17:00:00'),
+      gateOutImages: ['/uploads/gate-out-5.jpg'],
+      customerSignature: '/uploads/signature-5.png',
+    },
+    feedback: {
+      rating: 4,
+      comments: 'Good service, but took longer than expected.',
+      submittedAt: new Date('2026-03-29T09:00:00'),
+    },
+    activities: [
+      { id: 'act-14', type: 'status_change', description: 'Ticket created', newValue: 'open', performedBy: users[0], timestamp: new Date('2026-03-27T14:00:00') },
+      { id: 'act-15', type: 'assignment', description: 'Assigned to Michael Roberts', newValue: 'Michael Roberts', performedBy: users[0], timestamp: new Date('2026-03-27T14:30:00') },
+      { id: 'act-16', type: 'status_change', description: 'Status changed', previousValue: 'assigned', newValue: 'in_progress', performedBy: users[1], timestamp: new Date('2026-03-28T09:30:00') },
+      { id: 'act-17', type: 'status_change', description: 'Status changed', previousValue: 'in_progress', newValue: 'resolved', performedBy: users[1], timestamp: new Date('2026-03-28T16:30:00') },
+      { id: 'act-18', type: 'status_change', description: 'Status changed', previousValue: 'resolved', newValue: 'closed', performedBy: users[0], timestamp: new Date('2026-03-29T10:00:00') },
+    ],
+    slaDueTime: new Date('2026-03-29T14:00:00'),
+    isEscalated: false,
+    createdAt: new Date('2026-03-27T14:00:00'),
+    updatedAt: new Date('2026-03-29T10:00:00'),
+  },
+]
+
+// Service Alerts
+export const serviceAlerts: ServiceAlert[] = [
+  {
+    id: 'alert-1',
+    type: 'critical',
+    category: 'sla_breach',
+    title: 'SLA Breached',
+    message: 'Ticket TKT-2026-0001 has exceeded SLA response time.',
+    relatedTicketId: 'tkt-1',
+    read: false,
+    createdAt: new Date('2026-04-05T22:05:00'),
+  },
+  {
+    id: 'alert-2',
+    type: 'critical',
+    category: 'sla_breach',
+    title: 'SLA Breached',
+    message: 'Ticket TKT-2026-0002 (Critical) has exceeded SLA response time.',
+    relatedTicketId: 'tkt-2',
+    read: false,
+    createdAt: new Date('2026-04-07T11:35:00'),
+  },
+  {
+    id: 'alert-3',
+    type: 'warning',
+    category: 'escalation',
+    title: 'Ticket Escalated',
+    message: 'Ticket TKT-2026-0001 has been escalated due to SLA breach.',
+    relatedTicketId: 'tkt-1',
+    read: false,
+    createdAt: new Date('2026-04-05T22:10:00'),
+  },
+  {
+    id: 'alert-4',
+    type: 'info',
+    category: 'ticket_assigned',
+    title: 'Ticket Assigned',
+    message: 'You have been assigned ticket TKT-2026-0003.',
+    relatedTicketId: 'tkt-3',
+    read: true,
+    createdAt: new Date('2026-04-08T09:05:00'),
+  },
+  {
+    id: 'alert-5',
+    type: 'warning',
+    category: 'approval_pending',
+    title: 'Quotation Pending Approval',
+    message: 'Service quotation for TKT-2026-0002 requires approval.',
+    relatedTicketId: 'tkt-2',
+    read: false,
+    createdAt: new Date('2026-04-07T10:30:00'),
+  },
+]
+
+// Helper functions for Service Module
+export function getSLAHours(priority: TicketPriority): number {
+  const config = slaConfigs.find(c => c.priority === priority)
+  return config?.responseTimeHours ?? 24
+}
+
+export function calculateSLADueTime(createdAt: Date, priority: TicketPriority): Date {
+  const hours = getSLAHours(priority)
+  return new Date(createdAt.getTime() + hours * 60 * 60 * 1000)
+}
+
+export function isSLABreached(ticket: Ticket): boolean {
+  if (['resolved', 'closed'].includes(ticket.status)) return false
+  return new Date() > ticket.slaDueTime
+}
+
+export function getSLATimeRemaining(slaDueTime: Date): string {
+  const now = new Date()
+  const diff = slaDueTime.getTime() - now.getTime()
+  
+  if (diff < 0) {
+    const overdue = Math.abs(diff)
+    const hours = Math.floor(overdue / (1000 * 60 * 60))
+    const minutes = Math.floor((overdue % (1000 * 60 * 60)) / (1000 * 60))
+    return `${hours}h ${minutes}m overdue`
+  }
+  
+  const hours = Math.floor(diff / (1000 * 60 * 60))
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+  return `${hours}h ${minutes}m remaining`
+}
+
+export function getServiceStats() {
+  const openTickets = tickets.filter(t => t.status === 'open').length
+  const inProgressTickets = tickets.filter(t => ['assigned', 'in_progress', 'waiting'].includes(t.status)).length
+  const resolvedTickets = tickets.filter(t => t.status === 'resolved').length
+  const closedTickets = tickets.filter(t => t.status === 'closed').length
+  const escalatedTickets = tickets.filter(t => t.isEscalated).length
+  const breachedTickets = tickets.filter(t => isSLABreached(t)).length
+  const unreadAlerts = serviceAlerts.filter(a => !a.read).length
+
+  return {
+    openTickets,
+    inProgressTickets,
+    resolvedTickets,
+    closedTickets,
+    escalatedTickets,
+    breachedTickets,
+    unreadAlerts,
+    totalTickets: tickets.length,
+  }
 }
 
 // Dashboard Stats
