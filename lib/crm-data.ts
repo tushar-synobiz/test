@@ -17,6 +17,42 @@ export type SAPSyncStatus = 'synced' | 'pending' | 'failed'
 export type AlertType = 'info' | 'warning' | 'critical'
 export type AlertCategory = 'sla_breach' | 'ticket_assigned' | 'escalation' | 'approval_pending' | 'ticket_updated'
 
+// Tracking Types
+export type NotificationChannel = 'email' | 'push' | 'in_app'
+export type NotificationStatus = 'sent' | 'delivered' | 'failed' | 'pending'
+
+export interface LocationLog {
+  id: string
+  user: User
+  latitude: number
+  longitude: number
+  address?: string
+  accuracy: number
+  timestamp: Date
+  activityId?: string
+}
+
+export interface NotificationHistory {
+  id: string
+  type: string
+  channel: NotificationChannel
+  recipient: User
+  subject: string
+  message: string
+  status: NotificationStatus
+  retryCount: number
+  sentAt: Date
+  deliveredAt?: Date
+}
+
+export interface EmailNotificationSettings {
+  activityReminders: boolean
+  approvalAlerts: boolean
+  dealUpdates: boolean
+  dailyDigest: boolean
+  weeklyReport: boolean
+}
+
 export interface User {
   id: string
   name: string
